@@ -1,7 +1,7 @@
 import os
 import json
 import re
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 from langchain import PromptTemplate, LLMChain
 from langchain.text_splitter import CharacterTextSplitter
@@ -66,7 +66,7 @@ def generate_qa_pairs(chunks, subject_input):
 
     # load_dotenv()
     # openapi key -------------------
-    openai_api_key = "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"
+    openai_api_key = "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"
 
     # here define model ---------------------------
     chat = ChatOpenAI(
