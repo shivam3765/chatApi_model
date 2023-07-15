@@ -1,10 +1,8 @@
-import os
 import json
 import re
-# from dotenv import load_dotenv
-from PyPDF2 import PdfReader
+import os
+from dotenv import load_dotenv
 from langchain import PromptTemplate, LLMChain
-from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain import PromptTemplate
@@ -16,43 +14,16 @@ from langchain.prompts.chat import (
 )
 from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 
-from fastapi import FastAPI
-import requests
-import uvicorn
-from pydantic import BaseModel
+# load env file ---------------------
+load_dotenv()
 
 
-app = FastAPI()
-
-
-# this function extract text from pdf
-def extract_text_from_pdf(pdf):
-
-    if pdf is not None:
-        pdf_reader = PdfReader(pdf)
-
-        raw_text = ''
-        for i, page in enumerate(pdf_reader.pages):
-            text = page.extract_text()
-            if text:
-                raw_text += text
-
-        text_splitter = CharacterTextSplitter(
-            separator = "\n",
-            chunk_size=1000,
-            chunk_overlap=200,
-            length_function=len
-        )
-
-        chunks_list = text_splitter.split_text(raw_text)
-
-        # chunks.append(chunks_list)
-        print(chunks_list[0])
-        return chunks_list
-
-
-# this function generate Q&A Pairs
+# geneate question and answer pairs function -------------------
 def generate_qa_pairs(chunks, subject_input):
+
+    # openapi key -------------------
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+
 
     response_schemas = [
         ResponseSchema(
@@ -63,10 +34,6 @@ def generate_qa_pairs(chunks, subject_input):
 
     output_parser = StructuredOutputParser.from_response_schemas(
         response_schemas)
-
-    # load_dotenv()
-    # openapi key -------------------
-    openai_api_key = "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"
 
     # here define model ---------------------------
     chat = ChatOpenAI(
@@ -217,43 +184,3 @@ So, the answer is that it takes the second ball the same amount of time T' as it
         print()
 
     return data
-
-
-class Doc(BaseModel):
-    pdf_url: str
-    subject: str
-
-# here use get route
-@app.get('/generate_qa_pairs')
-def start():
-    return "hello world"
-
-
-# here use post route
-@app.post('/generate_qa_pairs')
-async def generate_qa_pairs_api(request: Doc):
-
-    response = request.pdf_url
-    subject_input = request.subject
-
-    file = requests.get(response)
-
-    if file.status_code == 200:
-        filename = response.split("/")[-1]
-        with open(filename, 'wb') as f:
-            f.write(file.content)
-
-    # filename = "english_subject.pdf"
-    chunks = extract_text_from_pdf(filename)
-
-    # return chunks
-
-    qa_pairs = generate_qa_pairs(chunks, subject_input)
-
-    return qa_pairs
-
-
-if __name__ == '__main__':
-    uvicorn.run(app, host="localhost", port=8000)
-
-    # uvicorn app:app --reload
