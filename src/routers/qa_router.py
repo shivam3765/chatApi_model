@@ -1,20 +1,20 @@
-from fastapi import FastAPI
-import uvicorn
-from extract_text.extract_text_from_pdf import extract_text_from_pdf
-from qa_pairs.generate_qa_pairs import generate_qa_pairs
+from src.extract_text.create_chunk import extract_text_from_pdf
+from src.qa_pairs.generate_qa_pairs import generate_qa_pairs
 import requests
-from schama.Doc import Doc
+from src.schama.Doc import Doc
 
+from fastapi.routing import APIRouter
 
-app = FastAPI()
+router = APIRouter()
+
 
 # here use get route
-@app.get('/generate_qa_pairs')
+@router.get('/generate_qa_pairs')
 def start():
     return "hello world"
 
 # here use post route
-@app.post('/generate_qa_pairs')
+@router.post('/generate_qa_pairs')
 async def generate_qa_pairs_api(request: Doc):
 
     response = request.pdf_url
@@ -35,9 +35,3 @@ async def generate_qa_pairs_api(request: Doc):
     qa_pairs = generate_qa_pairs(chunks, subject_input)
 
     return qa_pairs
-
-
-if __name__ == '__main__':
-    uvicorn.run(app, host="localhost", port=8000)
-
-    # uvicorn app:app --reload
